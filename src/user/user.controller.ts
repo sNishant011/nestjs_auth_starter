@@ -30,7 +30,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -48,11 +48,7 @@ export class UserController {
     @Body() createUserDto: CreateUserDto,
     @Req() req: ExpressRequestWithJWT,
   ) {
-    if (
-      createUserDto.role === UserRole.ADMIN ||
-      createUserDto.role === UserRole.PROVIDER ||
-      createUserDto.role === UserRole.DRIVER
-    ) {
+    if (createUserDto.role === UserRole.ADMIN) {
       const token = req.cookies['token'];
       if (token) {
         const user = (await this.jwtService.verifyAsync(token)) as JwtPayload;
@@ -67,7 +63,7 @@ export class UserController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Role([UserRole.ADMIN, UserRole.PROVIDER])
+  @Role([UserRole.ADMIN])
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Get()
   findAll() {
@@ -75,24 +71,18 @@ export class UserController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Role([UserRole.ADMIN, UserRole.PROVIDER, UserRole.DRIVER, UserRole.COMMUTER])
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: ExpressRequestWithJWT) {
     const user = request.user;
-    if (
-      user.role === UserRole.ADMIN ||
-      user.role === UserRole.PROVIDER ||
-      user.id === id
-    ) {
+    if (user.role === UserRole.ADMIN || user.id === id) {
       return this.userService.findOne(id);
     }
     throw new ForbiddenException('You are not authorized to view this.');
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Role([UserRole.ADMIN, UserRole.PROVIDER, UserRole.DRIVER, UserRole.COMMUTER])
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -101,11 +91,7 @@ export class UserController {
   ) {
     const user = request.user;
     if (user.role === UserRole.ADMIN || user.id === id) {
-      if (
-        updateUserDto.role &&
-        updateUserDto.role !== 'commuter' &&
-        user.role !== UserRole.ADMIN
-      ) {
+      if (updateUserDto.role && user.role !== UserRole.ADMIN) {
         throw new ForbiddenException('You are not authorized to edit this.');
       }
       return this.userService.update(id, updateUserDto);

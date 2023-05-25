@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getPasswordHash } from 'src/utils/auth.utils';
 import { Repository } from 'typeorm';
@@ -10,7 +10,7 @@ import { User } from './entities/user.entity';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     // using bcrypt to save password after hashing
@@ -19,8 +19,8 @@ export class UserService {
       ...createUserDto,
       password: passwordHash,
     });
-    const { password, isActive, ...user } = newUser;
-    return user;
+    delete newUser.password;
+    return newUser;
   }
 
   findAll(): Promise<User[]> {

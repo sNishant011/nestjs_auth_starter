@@ -1,6 +1,5 @@
 import { Exclude } from 'class-transformer';
 import {
-  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -11,15 +10,12 @@ import {
 
 export enum UserRole {
   ADMIN = 'admin',
-  PROVIDER = 'provider',
-  DRIVER = 'driver',
-  COMMUTER = 'commuter',
+  USER = 'user',
 }
 
 @Entity()
 @Unique(['email'])
 @Unique(['phoneNumber'])
-@Check(`"age" > 5`)
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -40,14 +36,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  age: number;
-
   @Exclude()
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.COMMUTER,
+    default: UserRole.USER,
   })
   role: UserRole;
 
