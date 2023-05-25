@@ -24,8 +24,8 @@ import { ExpressRequestWithJWT, JwtPayload } from 'src';
 import { JwtService } from '@nestjs/jwt';
 import { RoleGuard } from 'src/auth/guard/role.guard';
 
-@ApiTags('user')
-@Controller('user')
+@ApiTags('users')
+@Controller('users')
 export class UserController {
   constructor(
     private readonly userService: UserService,
