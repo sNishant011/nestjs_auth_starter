@@ -5,15 +5,17 @@ import { JwtPayload } from 'src';
 import { Request } from 'express';
 
 @Injectable()
-export class JWTStrategy extends PassportStrategy(Strategy) {
+export class AccessTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-access',
+) {
   constructor() {
     super({
       usernameField: 'email',
+      secretOrKey: process.env.ACCESS_TOKEN_SECRET,
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          const token = request?.cookies?.['token'];
-
-          // In the test scenario, request.cookies is always undefined
+          const token = request?.cookies?.['accessToken'];
           if (!token) {
             throw new UnauthorizedException();
           }
@@ -21,15 +23,38 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
     });
   }
 
-  async validate(payload: JwtPayload) {
-    return {
-      id: payload.id,
-      email: payload.email,
-      role: payload.role,
-    };
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    return payload;
+  }
+}
+
+@Injectable()
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
+  constructor() {
+    super({
+      secretOrKey: process.env.REFRESH_TOKEN_SECRET,
+      passReqToCallback: true,
+      ignoreExpiration: false,
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          const token = request?.cookies?.['refreshToken'];
+          if (!token) {
+            throw new UnauthorizedException();
+          }
+          return token;
+        },
+      ]),
+    });
+  }
+
+  validate(req: Request, payload: JwtPayload) {
+    const refreshToken = req?.cookies?.['refreshToken'];
+    return { ...payload, refreshToken };
   }
 }

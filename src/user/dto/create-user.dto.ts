@@ -2,7 +2,6 @@ import { UserRole } from '../entities/user.entity';
 import {
   IsString,
   IsEmail,
-  Matches,
   IsNotEmpty,
   IsStrongPassword,
   IsEnum,
@@ -21,12 +20,6 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   lastName: string;
-
-  @Matches(/^(?:\+977)?98[0-9]{8}$/, {
-    message: 'Phone number must be a valid Nepali phone number',
-  })
-  @IsString()
-  phoneNumber: string;
 
   @IsEmail()
   @IsNotEmpty()

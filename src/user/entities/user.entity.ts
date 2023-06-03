@@ -1,3 +1,4 @@
+import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import {
   Column,
@@ -15,10 +16,9 @@ export enum UserRole {
 
 @Entity()
 @Unique(['email'])
-@Unique(['phoneNumber'])
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   firstName: string;
@@ -27,16 +27,13 @@ export class User {
   lastName: string;
 
   @Column()
-  phoneNumber: string;
-
-  @Column()
   email: string;
 
+  @ApiHideProperty()
   @Exclude()
   @Column()
   password: string;
 
-  @Exclude()
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -56,4 +53,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ApiHideProperty()
+  @Column({ nullable: true })
+  @Exclude()
+  refreshToken?: string;
 }

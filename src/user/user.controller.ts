@@ -16,13 +16,13 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from 'src/auth/decorator/role.decorator';
-import { UserRole } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { ExpressRequestWithJWT, JwtPayload } from 'src';
 import { JwtService } from '@nestjs/jwt';
 import { RoleGuard } from 'src/auth/guard/role.guard';
+import { AccessAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -33,7 +33,7 @@ export class UserController {
   ) {}
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('profile')
   async getProfile(@Req() req: ExpressRequestWithJWT) {
@@ -42,6 +42,9 @@ export class UserController {
     return user;
   }
 
+  @ApiCreatedResponse({
+    type: User,
+  })
   @Post()
   @UseInterceptors(ClassSerializerInterceptor)
   async create(
@@ -64,25 +67,25 @@ export class UserController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Role([UserRole.ADMIN])
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(AccessAuthGuard, RoleGuard)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: ExpressRequestWithJWT) {
     const user = request.user;
-    if (user.role === UserRole.ADMIN || user.id === id) {
-      return this.userService.findOne(id);
+    if (user.role === UserRole.ADMIN || user.id === +id) {
+      return this.userService.findOne(+id);
     }
     throw new ForbiddenException('You are not authorized to view this.');
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -90,20 +93,20 @@ export class UserController {
     @Req() request: ExpressRequestWithJWT,
   ) {
     const user = request.user;
-    if (user.role === UserRole.ADMIN || user.id === id) {
+    if (user.role === UserRole.ADMIN || user.id === +id) {
       if (updateUserDto.role && user.role !== UserRole.ADMIN) {
         throw new ForbiddenException('You are not authorized to edit this.');
       }
-      return this.userService.update(id, updateUserDto);
+      return this.userService.update(+id, updateUserDto);
     }
     throw new ForbiddenException('You are not authorized to edit this.');
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Role([UserRole.ADMIN])
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(AccessAuthGuard, RoleGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+    return this.userService.remove(+id);
   }
 }

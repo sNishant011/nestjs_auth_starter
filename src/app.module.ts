@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import configuration from './config/configuration';
 import { AuthModule } from './auth/auth.module';
 import { CoreModule } from './core/core.module';
+import { envVariables } from 'src';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { CoreModule } from './core/core.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
+      useFactory: (configService: ConfigService<envVariables>) => {
         const databaseConfig = configService.get('database');
         return {
           type: 'mysql',

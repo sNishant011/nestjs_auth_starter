@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { getPasswordHash } from 'src/utils/auth.utils';
+import {
+  getPasswordHash,
+  hashRefreshToken,
+  matchRefreshToken,
+} from 'src/utils/auth.utils';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,6 +24,7 @@ export class UserService {
       password: passwordHash,
     });
     delete newUser.password;
+    delete newUser.refreshToken;
     return newUser;
   }
 
@@ -27,7 +32,7 @@ export class UserService {
     return this.userRepository.find();
   }
 
-  findOne(id: string) {
+  findOne(id: number) {
     return this.userRepository.findOneBy({ id });
   }
 
@@ -35,11 +40,29 @@ export class UserService {
     return this.userRepository.findOneBy({ email });
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
+  update(id: number, updateUserDto: UpdateUserDto) {
     return this.userRepository.update(id, updateUserDto);
   }
 
-  remove(id: string) {
+  remove(id: number) {
     return this.userRepository.delete(id);
+  }
+
+  async updateRefreshToken(id: number, refreshToken: string | null) {
+    if (!refreshToken) {
+      return this.userRepository.update(id, { refreshToken: null });
+    }
+    const { refreshTokenHash } = await hashRefreshToken(refreshToken, 7);
+    return this.userRepository.update(id, { refreshToken: refreshTokenHash });
+  }
+
+  async isRefreshTokenValid(id: number, refreshToken: string) {
+    const { refreshToken: refreshTokenInDB } =
+      await this.userRepository.findOne({
+        where: { id },
+        select: { refreshToken: true },
+      });
+    const isMatch = await matchRefreshToken(refreshToken, refreshTokenInDB);
+    return isMatch;
   }
 }
