@@ -61,7 +61,7 @@ export class UserController {
       }
       throw new UnauthorizedException('You cannot create this user');
     }
-    const { role, ...userWithoutRole } = createUserDto;
+    const { role: _role, ...userWithoutRole } = createUserDto;
     return this.userService.create(userWithoutRole);
   }
 
