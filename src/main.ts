@@ -19,7 +19,6 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth()
-    .addTag('user')
     .build();
 
   app.setGlobalPrefix('api');
@@ -28,7 +27,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new GlobalExceptionFilter());
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('', app, document);
-  await app.listen(3001);
+  SwaggerModule.setup('/api/docs', app, document);
+  await app.listen(8000);
 }
 bootstrap();

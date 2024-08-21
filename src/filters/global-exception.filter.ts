@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { capitalizeFirstLetter } from 'src/utils/string.utils';
 import {
   QueryFailedError,
   EntityNotFoundError,
@@ -56,7 +57,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = HttpStatus.UNPROCESSABLE_ENTITY;
         code = (exception as any).code;
         if (code === 'ER_DUP_ENTRY') {
-          message = 'Some field value is already taken';
+          const key = (exception as any)?.sqlMessage.split(' ')?.at(2);
+          message = `${key} already taken`;
         } else if (code === 'ER_NO_REFERENCED_ROW_2') {
           message = 'It has a reference to a non-existent entity';
         } else if (code === 'ER_ROW_IS_REFERENCED_2') {
@@ -93,7 +95,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     response
       .status(status)
-      .json(GlobalResponseError(status, message, code, request));
+      .json(
+        GlobalResponseError(
+          status,
+          typeof message === 'string'
+            ? capitalizeFirstLetter(message)
+            : message,
+          code,
+          request,
+        ),
+      );
   }
 }
 export interface ResponseError {

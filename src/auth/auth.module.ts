@@ -8,9 +8,15 @@ import {
   AccessTokenStrategy,
   RefreshTokenStrategy,
 } from './strategy/jwt.strategy';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RefreshToken } from './entity/refresh-token.entity';
 
 @Module({
-  imports: [UserModule, PassportModule],
+  imports: [
+    TypeOrmModule.forFeature([RefreshToken]),
+    UserModule,
+    PassportModule,
+  ],
   providers: [
     AuthService,
     LocalStrategy,

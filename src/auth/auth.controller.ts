@@ -79,44 +79,11 @@ export class AuthController {
     const userId = req.user.id;
     // check if refresh token is valid
     const refreshToken = req.user.refreshToken;
-    console.log(refreshToken);
     const isRefreshTokenValid = this.userService.isRefreshTokenValid(
       userId,
       refreshToken,
     );
-    if (isRefreshTokenValid) {
-      // generate new token
-      console.log(req.user);
-      const tokens = await this.authService.generateToken({
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-      });
-
-      // save refresh token to db
-      await this.userService.updateRefreshToken(userId, tokens.refreshToken);
-
-      // set cookie
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge:
-          this.configService.get('jwt', { infer: true })
-            .refreshTokenExpiryInSeconds * 1000,
-      });
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge:
-          this.configService.get('jwt', { infer: true })
-            .accessTokenExpiryInSeconds * 1000,
-      });
-      return {
-        message: 'Token refreshed successfully!',
-      };
-    } else {
+    if (!isRefreshTokenValid) {
       throw new HttpException(
         {
           message: 'Invalid token',
@@ -124,5 +91,35 @@ export class AuthController {
         400,
       );
     }
+    // generate new token
+    const tokens = await this.authService.generateToken({
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+    });
+
+    // save refresh token to db
+    await this.userService.updateRefreshToken(userId, tokens.refreshToken);
+
+    // set cookie
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge:
+        this.configService.get('jwt', { infer: true })
+          .refreshTokenExpiryInSeconds * 1000,
+    });
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge:
+        this.configService.get('jwt', { infer: true })
+          .accessTokenExpiryInSeconds * 1000,
+    });
+    return {
+      message: 'Token refreshed successfully!',
+    };
   }
 }
